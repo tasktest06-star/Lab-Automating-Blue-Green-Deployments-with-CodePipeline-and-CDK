@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DeploymentPreferenceType:
+    Type: String
+    Default: AllAtOnce
+    AllowedValues:
+      - AllAtOnce
+      - Linear10PercentEvery1Minute
+
+Conditions:
+  HasDeploymentPreference: !Not [!Equals [!Ref DeploymentPreferenceType, AllAtOnce]]
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: index.handler
+      Runtime: nodejs22.x
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Enabled: !If [HasDeploymentPreference, true, false]
+        Type: !Ref DeploymentPreferenceType       
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
