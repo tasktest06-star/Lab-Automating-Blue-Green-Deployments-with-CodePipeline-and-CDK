@@ -41,8 +41,8 @@ export class ApiPipelineStack extends cdk.Stack {
     const samBuildProject = this.createBuildProject(codeBuildRole, sourceBucket);
     const devDeployProject = this.createDeployProject('DevDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.DEV);
     // const testDeployProject = this.createDeployProject('TestDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.TEST);
-    const prodDeployProject = this.createDeployProject('ProdDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.PROD);
-    
+    // const prodDeployProject = this.createDeployProject('ProdDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.PROD);
+    const prodDeployProject = this.createDeployProject('ProdDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.PROD, CONFIG.DEPLOYMENT_PREFERENCES.PROD);
     // CodePipeline
     //this.createPipeline(codePipelineRole, sourceBucket, samBuildProject, devDeployProject);
     this.createPipeline(codePipelineRole, sourceBucket, samBuildProject, devDeployProject, prodDeployProject);
@@ -194,6 +194,7 @@ export class ApiPipelineStack extends cdk.Stack {
       this.createSourceStage(sourceBucket, sourceOutput),
       this.createBuildStage(buildProject, sourceOutput, buildOutput),
       this.createDeployStage('Dev', 'DeployToDev', devDeployProject, buildOutput),
+      this.createApprovalStage('ApproveProduction', 'ApproveProductionDeployment'),
       this.createDeployStage('Production', 'DeployToProduction', prodDeployProject, buildOutput)
     ];
 
