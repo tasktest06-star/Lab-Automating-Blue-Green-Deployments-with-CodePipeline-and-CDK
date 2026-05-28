@@ -41,11 +41,12 @@ export class ApiPipelineStack extends cdk.Stack {
     const samBuildProject = this.createBuildProject(codeBuildRole, sourceBucket);
     const devDeployProject = this.createDeployProject('DevDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.DEV);
     // const testDeployProject = this.createDeployProject('TestDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.TEST);
-    
+    const prodDeployProject = this.createDeployProject('ProdDeployProject', codeBuildRole, sourceBucket, CONFIG.STACK_NAMES.PROD);
     
     // CodePipeline
-    this.createPipeline(codePipelineRole, sourceBucket, samBuildProject, devDeployProject);
-
+    //this.createPipeline(codePipelineRole, sourceBucket, samBuildProject, devDeployProject);
+    this.createPipeline(codePipelineRole, sourceBucket, samBuildProject, devDeployProject, prodDeployProject);
+    
     new cdk.CfnOutput(this, 'SourceBucketName', {
       value: sourceBucket.bucketName,
     });
@@ -182,15 +183,18 @@ export class ApiPipelineStack extends cdk.Stack {
     role: iam.Role,
     sourceBucket: s3.Bucket,
     buildProject: codebuild.Project,
-    devDeployProject: codebuild.Project
+    devDeployProject: codebuild.Project,
+    prodDeployProject: codebuild.Project
   ): codepipeline.Pipeline {
     const sourceOutput = new codepipeline.Artifact();
     const buildOutput = new codepipeline.Artifact();
 
+    
     const stages = [
       this.createSourceStage(sourceBucket, sourceOutput),
       this.createBuildStage(buildProject, sourceOutput, buildOutput),
-      this.createDeployStage('Dev', 'DeployToDev', devDeployProject, buildOutput)
+      this.createDeployStage('Dev', 'DeployToDev', devDeployProject, buildOutput),
+      this.createDeployStage('Production', 'DeployToProduction', prodDeployProject, buildOutput)
     ];
 
     return new codepipeline.Pipeline(this, 'Pipeline', {
